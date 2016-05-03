@@ -60,30 +60,40 @@ void rgb(int r, int g, int b) {
   digitalWrite(blue, b);
 }
 
+void plant_too_wet() {
+  rgb(LOW, LOW, HIGH);
+  lcd.setCursor(0,3);
+  lcd.print("Woah, too much!");
+}
+
+void plant_is_good() {
+  rgb(LOW, HIGH, LOW);
+  lcd.setCursor(0,3);
+  lcd.print("All is good!");
+}
+
+void plant_too_dry() {
+  rgb(HIGH, LOW, LOW);
+  lcd.setCursor(0,3);
+  lcd.print("Feed me!");
+}
+
 void loop() {
   if (millis() - last_sample_time > 1000) {
     last_sample_time = millis();
+    
     int analog = analogRead(A0);
-
     Serial.println(analog);
+    
     lcd.setCursor(16,1);
     lcd.print(analog);
     
     if (analog < limit_too_much) {
-      // [0,199] -> too much water, blue light.
-      rgb(LOW, LOW, HIGH);
-      lcd.setCursor(0,3);
-      lcd.print("Woah, too much!");
+      plant_too_wet();
     } else if (analog < limit_too_little) {
-      // [200, 499] -> water si good, green light.
-      rgb(LOW, HIGH, LOW);
-      lcd.setCursor(0,3);
-      lcd.print("All is good!");
+      plant_is_good();
     } else {
-      // [500,1023] -> too little water, red light.
-      rgb(HIGH, LOW, LOW);
-      lcd.setCursor(0,3);
-      lcd.print("Feed me!");
+      plant_too_dry();
     }
   }
 
