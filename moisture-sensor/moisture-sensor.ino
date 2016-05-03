@@ -2,29 +2,29 @@
 #include <LiquidCrystal_I2C.h>
 #include "Button.h"
 
-int wait = 100;
-
+// RGB LED
 int red = 8;
 int green = 9;
 int blue = 10;
 
-Button button = Button(2, &toggle_backlight);
-int analog = A0;
-
+// LCD screen
+LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); 
+Button button = Button(2, &toggle_backlight_callback);
 bool lcd_backlight_on = true;
 
+// Moisture sensor
+int analog = A0;
 int limit_too_much = 200;
 int limit_too_little = 500;
-
-LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); 
+unsigned long last_sample_time = 0;
 
 void setup() {
   Serial.begin(9600);
   
-  pinMode(A0, INPUT); // A0
-  pinMode(red,   OUTPUT);
-  pinMode(green, OUTPUT);
-  pinMode(blue,  OUTPUT);
+  pinMode(analog, INPUT);
+  pinMode(red,    OUTPUT);
+  pinMode(green,  OUTPUT);
+  pinMode(blue,   OUTPUT);
 
   setup_lcd();
 }
@@ -42,7 +42,7 @@ void setup_lcd() {
   lcd.backlight();
 }
 
-void toggle_backlight(Button* button) {
+void toggle_backlight_callback(Button* button) {
   if (button->pressed){
     lcd_backlight_on = !lcd_backlight_on;
 
@@ -54,20 +54,17 @@ void toggle_backlight(Button* button) {
   }
 }
 
-
 void rgb(int r, int g, int b) {
   digitalWrite(red, r);
   digitalWrite(green, g);
   digitalWrite(blue, b);
 }
 
-int i = 0;
-
 void loop() {
-  i = i+1;
-  
-  if (i > 10) {
+  if (millis() - last_sample_time > 1000) {
+    last_sample_time = millis();
     int analog = analogRead(A0);
+
     Serial.println(analog);
     lcd.setCursor(16,1);
     lcd.print(analog);
@@ -88,11 +85,8 @@ void loop() {
       lcd.setCursor(0,3);
       lcd.print("Feed me!");
     }
-    i = 0;
   }
 
   button.read();
-
-  delay(wait);
 }
 
