@@ -15,7 +15,7 @@ bool lcd_backlight_on = true;
 // Moisture sensor
 int analog = A0;
 int limit_too_much = 200;
-int limit_too_little = 500;
+int limit_too_little = 400;
 unsigned long last_sample_time = 0;
 
 void setup() {
