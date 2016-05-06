@@ -36,10 +36,6 @@ void setup_lcd() {
   
   lcd.setCursor(0,0);
   lcd.print("Audrey Jr.");
-  lcd.setCursor(0,1);
-  lcd.print("Moisture level:");
-
-  lcd.backlight();
 }
 
 void toggle_backlight_callback(Button* button) {
@@ -63,19 +59,19 @@ void rgb(int r, int g, int b) {
 void plant_too_wet() {
   rgb(LOW, LOW, HIGH);
   lcd.setCursor(0,3);
-  lcd.print("Woah, too much!");
+  lcd.print("Woah, too much!     ");
 }
 
 void plant_is_good() {
   rgb(LOW, HIGH, LOW);
   lcd.setCursor(0,3);
-  lcd.print("All is good!");
+  lcd.print("All is good!        ");
 }
 
 void plant_too_dry() {
   rgb(HIGH, LOW, LOW);
   lcd.setCursor(0,3);
-  lcd.print("Feed me!");
+  lcd.print("Feed me!            ");
 }
 
 void loop() {
@@ -84,7 +80,11 @@ void loop() {
     
     int analog = analogRead(A0);
     Serial.println(analog);
-    
+
+    lcd.setCursor(0,1);
+    lcd.print("Moisture level:");
+    lcd.setCursor(16,1);
+    lcd.print("    ");
     lcd.setCursor(16,1);
     lcd.print(analog);
     
