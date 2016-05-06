@@ -66,8 +66,32 @@ void loremIpsumScrolling() {
   }
 }
 
-void loop() {
+void customChars() {
+  byte l_ae[8] ={ B00000,B00000,B11010,B00101,B01111,B10100,B11111,B00000}; // æ
+  byte l_oe[8] ={ B00000,B00001,B01110,B10101,B10101,B01110,B10000,B00000}; // ø
+  byte l_aa[8] ={ B00100,B00000,B01110,B00001,B01111,B10001,B01111,B00000}; // å
+  byte u_ae[8] ={ B01111,B10100,B10100,B11110,B10100,B10100,B10111,B00000}; // Æ
+  byte u_oe[8] ={ B00001,B01110,B10011,B10101,B11001,B01110,B10000,B00000}; // Ø
+  byte u_aa[8] ={ B00100,B00000,B01110,B10001,B11111,B10001,B10001,B00000}; // Å
+  
+  lcd.createChar(1, l_ae); 
+  lcd.createChar(2, l_oe); 
+  lcd.createChar(3, l_aa); 
+  lcd.createChar(4, u_ae); 
+  lcd.createChar(5, u_oe); 
+  lcd.createChar(6, u_aa); 
+  
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Norwegian chars:");
+  lcd.setCursor(0,1);
+  lcd.print("\1, \2, \3, \4, \5 and \6");
+  delay(3000);
+}
+
+void loop() {  
   loremIpsum();
   loremIpsumScrolling();
+  customChars();
 }
 
