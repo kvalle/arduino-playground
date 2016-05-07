@@ -66,32 +66,43 @@ void loremIpsumScrolling() {
   }
 }
 
-void customChars() {
-  byte l_ae[8] ={ B00000,B00000,B11010,B00101,B01111,B10100,B11111,B00000}; // æ
-  byte l_oe[8] ={ B00000,B00001,B01110,B10101,B10101,B01110,B10000,B00000}; // ø
-  byte l_aa[8] ={ B00100,B00000,B01110,B00001,B01111,B10001,B01111,B00000}; // å
-  byte u_ae[8] ={ B01111,B10100,B10100,B11110,B10100,B10100,B10111,B00000}; // Æ
-  byte u_oe[8] ={ B00001,B01110,B10011,B10101,B11001,B01110,B10000,B00000}; // Ø
-  byte u_aa[8] ={ B00100,B00000,B01110,B10001,B11111,B10001,B10001,B00000}; // Å
-  
-  lcd.createChar(1, l_ae); 
-  lcd.createChar(2, l_oe); 
-  lcd.createChar(3, l_aa); 
-  lcd.createChar(4, u_ae); 
-  lcd.createChar(5, u_oe); 
-  lcd.createChar(6, u_aa); 
+void norwegianLetters() {
+  // Create using https://omerk.github.io/lcdchargen/
+
+  byte hearthFull[8]  = { B00000,B00000,B01010,B11111,B11111,B01110,B00100,B00000 };
+  byte hearthEmpty[8] = { B00000,B00000,B01010,B10101,B10001,B01010,B00100,B00000 };
+  byte lowerAe[8]     = { B00000,B00000,B11010,B00101,B01111,B10100,B11111,B00000 }; // æ
+  byte lowerOe[8]     = { B00000,B00001,B01110,B10101,B10101,B01110,B10000,B00000 }; // ø
+  byte lowerAa[8]     = { B00100,B00000,B01110,B00001,B01111,B10001,B01111,B00000 }; // å
+  byte upperAe[8]     = { B01111,B10100,B10100,B11110,B10100,B10100,B10111,B00000 }; // Æ
+  byte upperOe[8]     = { B00001,B01110,B10011,B10101,B11001,B01110,B10000,B00000 }; // Ø
+  byte upperAa[8]     = { B00100,B00000,B01110,B10001,B11111,B10001,B10001,B00000 }; // Å
+
+  lcd.createChar(0, hearthFull); 
+  lcd.createChar(1, hearthEmpty); 
+  lcd.createChar(2, lowerAe); 
+  lcd.createChar(3, lowerOe); 
+  lcd.createChar(4, lowerAa); 
+  lcd.createChar(5, upperAe); 
+  lcd.createChar(6, upperOe); 
+  lcd.createChar(7, upperAa); 
   
   lcd.clear();
-  lcd.setCursor(0,0);
-  lcd.print("Norwegian chars:");
-  lcd.setCursor(0,1);
-  lcd.print("\1, \2, \3, \4, \5 and \6");
-  delay(3000);
+  for (int i = 0; i < 40; i++) {
+    lcd.setCursor(0,0);
+    lcd.print("Norwegian chars: ");
+    lcd.print(char(i % 2));
+    lcd.setCursor(0,2);
+    lcd.print("      \2  \3  \4");
+    lcd.setCursor(0,3);
+    lcd.print("      \5  \6  \7");
+    delay(300);
+  }
 }
 
 void loop() {  
   loremIpsum();
   loremIpsumScrolling();
-  customChars();
+  norwegianLetters();
 }
 
