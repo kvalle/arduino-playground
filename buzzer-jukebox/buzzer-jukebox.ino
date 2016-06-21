@@ -561,13 +561,15 @@ void play() {
   // duration of a whole note in ms
   int whole_duration = (60.0f / BPM) * 4 * 1000;
   
-  int numberOfNotes = sizeof(notes) / sizeof(int);
+  int numberOfNotes = sizeof(notes) / sizeof(notes[0]);
+  
   for (int i = 0; i < numberOfNotes; i++) {
     int noteDuration = whole_duration * note_durations[duration[i]];
+    int noteFrequency = note_frequencies[notes[i]];
 
     // play note
     int playDuration = noteDuration * (1 - PAUSE);
-    buzz(buzzerPin, note_frequencies[notes[i]], playDuration);
+    buzz(buzzerPin, noteFrequency, playDuration);
 
     // pause before next note
     int pauseDuration = noteDuration - playDuration;
