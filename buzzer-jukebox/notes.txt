@@ -1,0 +1,39 @@
+/*
+Other mario sounds.
+*/
+
+// 1up sound
+double const BPM = 400.0;
+double const PAUSE = 0.2;
+byte notes[] = {  
+  NOTE_E5, NOTE_G5, NOTE_E6, NOTE_C6, 
+  NOTE_D6, NOTE_G6, SILENT
+};
+byte duration[] = { 
+  QUARTER, QUARTER, QUARTER, QUARTER, 
+  QUARTER, QUARTER, HALF
+};
+
+// power up sound
+double const BPM = 400.0;
+double const PAUSE = 0.0; // no delay between notes
+byte notes[] = { NOTE_G5, NOTE_B5, NOTE_D6, NOTE_G6, NOTE_B6, NOTE_GS5, NOTE_C6, NOTE_DS6, NOTE_GS6, NOTE_C7, NOTE_AS5, NOTE_D6, NOTE_F6, NOTE_AS6, NOTE_D7 };
+byte duration[] = { QUARTER, QUARTER, QUARTER, QUARTER, QUARTER, QUARTER, QUARTER, QUARTER, QUARTER, QUARTER, QUARTER, QUARTER, QUARTER, QUARTER, QUARTER };
+
+// mario vine sound
+double const BPM = 480.0;
+double const PAUSE = 0.05;
+byte notes[] = { NOTE_G5, NOTE_GS5, NOTE_A5, NOTE_AS5, NOTE_B5, NOTE_C6, NOTE_CS6, NOTE_D6 };
+double tempo[] = { QUARTER, QUARTER, QUARTER, QUARTER, QUARTER, QUARTER, QUARTER, QUARTER };
+
+// pause sound
+double const BPM = 400.0;
+double const PAUSE = 0.2;
+byte notes[] = { NOTE_E6, NOTE_C6, NOTE_E6, NOTE_C6 };
+byte duration[] = { SIXTH, SIXTH, SIXTH, HALF };
+
+// mario coin
+double const BPM = 400.0;
+double const PAUSE = 0.2;
+byte notes[] = {  NOTE_B6, NOTE_E7 };
+byte duration[] = { QUARTER, WHOLE };
