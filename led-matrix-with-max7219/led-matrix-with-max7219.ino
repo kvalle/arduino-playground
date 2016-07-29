@@ -1,5 +1,9 @@
 #include "LedControl.h"
 
+/*
+ * Config 
+ */
+
 // SPI connector pins
 #define SPI_DIN  2
 #define SPI_CLK  4
@@ -17,7 +21,13 @@
 #define BUZZER_PIN 5
 #define BUTTON_PIN 6
 
+
+/*
+ * Model
+ */
+
 LedControl lc = LedControl(SPI_DIN, SPI_CLK, SPI_CS, DISPLAYS);
+
 
 int shot = -1;
 
@@ -32,6 +42,59 @@ byte ship[] =
   B01000000,
   B11110000
 };
+
+
+/*
+ * Update
+ */
+
+void update_bullet()
+{
+  if (shot < 0) {
+    return;
+  } else if (shot >= 8 * lc.getDeviceCount()) {
+    shot = -1;
+  } else {
+    shot++;  
+  }
+}
+
+
+
+/*
+ * View
+ */
+
+
+void shoot() {
+  shot = 0;
+  tone(BUZZER_PIN, 2960, 50);
+}
+
+
+void debug(String msg) 
+{
+  if (DEBUG) {
+    Serial.println(msg);
+  }
+}
+
+void animate_bullet()
+{
+  if (shot < 0) {
+    return;
+  }
+  
+  byte displays = lc.getDeviceCount() - 1;
+  byte col = shot % 8;
+  byte disp = displays - (shot / 8);
+
+  for (int d = 0; d < displays; d++) {
+    for (int c = 0; c < 8; c++) {
+      lc.setLed(d, 4, c, c == col && d == disp);
+    }
+  }
+}
 
 
 void setup()
@@ -55,49 +118,19 @@ void setup()
   }
 }
 
-void debug(String msg) 
-{
-  if (DEBUG) {
-    Serial.println(msg);
-  }
-}
-
-void animate_bullet()
-{
-  if (shot < 0)
-    return;
-  
-  byte displays = lc.getDeviceCount() - 1;
-  
-  byte col = shot % 8;
-  byte disp = displays - (shot / 8);
-
-  for (int d = 0; d < displays; d++) {
-    for (int c = 0; c < 8; c++) {
-      lc.setLed(d, 4, c, c == col && d == disp);
-    }
-  }
-
-  if (shot >= 8 * lc.getDeviceCount()) {
-    shot = -1;
-  } else {
-    shot++;  
-  }
-  
-  delay(FRAME);
-}
-
-void shoot() {
-  shot = 0;
-  tone(BUZZER_PIN, 2960, 50);
-}
-
 void loop()
 {
-  animate_bullet();
-
+  // input
   if (digitalRead(BUTTON_PIN) == LOW) {
     shoot();
   }
+
+  // update
+  update_bullet();
+
+  // view
+  animate_bullet();
+
+  delay(FRAME);
 }
 
