@@ -12,7 +12,7 @@
 #define FRAME 50
 
 // enable for debug mode
-#define DEBUG true
+#define DEBUG false
 
 #define BUZZER_PIN 5
 #define BUTTON_PIN 6
@@ -50,9 +50,6 @@ void setup()
     lc.setRow(3, i, ship[i]);
   }
 
-  // shots fired!
-  shot = 0;
-
   if (DEBUG) {
     Serial.begin(9600);
   }
@@ -65,8 +62,11 @@ void debug(String msg)
   }
 }
 
-void shoot()
+void animate_bullet()
 {
+  if (shot < 0)
+    return;
+  
   byte displays = lc.getDeviceCount() - 1;
   
   byte col = shot % 8;
@@ -80,7 +80,6 @@ void shoot()
 
   if (shot >= 8 * lc.getDeviceCount()) {
     shot = -1;
-    tone(BUZZER_PIN, 2960, 50);
   } else {
     shot++;  
   }
@@ -88,9 +87,16 @@ void shoot()
   delay(FRAME);
 }
 
+void shoot() {
+  shot = 0;
+  tone(BUZZER_PIN, 2960, 50);
+}
+
 void loop()
 {
-  if (shot >= 0) {
+  animate_bullet();
+
+  if (digitalRead(BUTTON_PIN) == LOW) {
     shoot();
   }
 }
