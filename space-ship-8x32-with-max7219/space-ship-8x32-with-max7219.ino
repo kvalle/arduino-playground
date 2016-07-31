@@ -1,3 +1,4 @@
+#include <Button.h>
 #include "LedControl.h"
 
 /*
@@ -16,21 +17,62 @@
 #define FRAME 5
 
 // enable for debug mode
-#define DEBUG false
+#define DEBUG true
 
+// button pins used
 #define BUZZER_PIN 5
-#define BUTTON_PIN 6
+#define FIRE_BUTTON_PIN 6
+#define UP_BUTTON_PIN 7
+#define DOWN_BUTTON_PIN 8
+
 
 
 /*
- * Model
+ * State
  */
 
 LedControl lc = LedControl(SPI_DIN, SPI_CLK, SPI_CS, DISPLAYS);
 
-
 int shot = -1;
 byte ship_position = 1;
+
+Button fireButton = Button(FIRE_BUTTON_PIN, &fireCallback);
+Button upButton = Button(UP_BUTTON_PIN, &upCallback);
+Button downButton = Button(DOWN_BUTTON_PIN, &downCallback);
+
+
+/*
+ * Input
+ */
+
+const int buttonAmount = 3;
+Button* buttons[buttonAmount] = {
+  &fireButton,
+  &upButton,
+  &downButton
+};
+
+void fireCallback(Button* button)
+{
+  if (button->pressed) {
+    debug("pew pew");
+    shoot();
+  }
+}
+
+void upCallback(Button* button)
+{ 
+  if (button->pressed && ship_position <= 5){
+    ship_position++;
+  }
+}
+
+void downCallback(Button* button)
+{
+  if (button->pressed && ship_position >= 2) {
+    ship_position--;
+  }
+}
 
 
 /*
@@ -48,18 +90,16 @@ void update_bullet()
   }
 }
 
-
-
-/*
- * View
- */
-
-
 void shoot() {
   shot = 0;
   tone(BUZZER_PIN, 2960, 50);
 }
 
+
+
+/*
+ * View
+ */
 
 void debug(String msg) 
 {
@@ -70,6 +110,9 @@ void debug(String msg)
 
 void draw_ship() 
 {
+  lc.setColumn(3, 0, B00000000);
+  lc.setColumn(3, 1, B00000000);
+  lc.setColumn(3, 2, B00000000);
   lc.setLed(3, ship_position - 1, 0, true);
   lc.setLed(3, ship_position - 1, 1, true);
   lc.setLed(3, ship_position, 1, true);
@@ -98,7 +141,7 @@ void draw_bullet()
 
 void setup()
 {  
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(FIRE_BUTTON_PIN, INPUT_PULLUP);
   
   // setup displays
   for (int i = 0; i < lc.getDeviceCount(); i++) {
@@ -115,9 +158,8 @@ void setup()
 void loop()
 {
   // input
-  if (digitalRead(BUTTON_PIN) == LOW) {
-    shoot();
-    ship_position++;
+  for (int i = 0; i < buttonAmount; i++){
+    buttons[i]->read();
   }
 
   // update
