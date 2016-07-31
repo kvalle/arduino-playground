@@ -13,7 +13,7 @@
 #define DISPLAYS 4
 
 // time to sleep in ms
-#define FRAME 50
+#define FRAME 5
 
 // enable for debug mode
 #define DEBUG false
@@ -30,18 +30,7 @@ LedControl lc = LedControl(SPI_DIN, SPI_CLK, SPI_CS, DISPLAYS);
 
 
 int shot = -1;
-
-byte ship[] =
-{
-  B00000000,
-  B11110000,
-  B01000000,
-  B11111100,
-  B11110111,
-  B11111100,
-  B01000000,
-  B11110000
-};
+byte ship_position = 1;
 
 
 /*
@@ -79,7 +68,17 @@ void debug(String msg)
   }
 }
 
-void animate_bullet()
+void draw_ship() 
+{
+  lc.setLed(3, ship_position - 1, 0, true);
+  lc.setLed(3, ship_position - 1, 1, true);
+  lc.setLed(3, ship_position, 1, true);
+  lc.setLed(3, ship_position, 2, true);
+  lc.setLed(3, ship_position + 1, 0, true);
+  lc.setLed(3, ship_position + 1, 1, true);
+}
+
+void draw_bullet()
 {
   if (shot < 0) {
     return;
@@ -108,11 +107,6 @@ void setup()
     lc.clearDisplay(i);
   }
 
-  // draw ship
-  for (int i = 0; i < 8; i++) {
-    lc.setRow(3, i, ship[i]);
-  }
-
   if (DEBUG) {
     Serial.begin(9600);
   }
@@ -123,13 +117,15 @@ void loop()
   // input
   if (digitalRead(BUTTON_PIN) == LOW) {
     shoot();
+    ship_position++;
   }
 
   // update
   update_bullet();
 
   // view
-  animate_bullet();
+  draw_ship();
+  draw_bullet();
 
   delay(FRAME);
 }
