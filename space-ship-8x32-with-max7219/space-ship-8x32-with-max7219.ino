@@ -123,13 +123,17 @@ void draw_bullet()
     return;
   }
   
-  byte displays = lc.getDeviceCount() - 1;
+  byte displays = lc.getDeviceCount();
   byte col = shot % 8;
-  byte disp = displays - (shot / 8);
+  byte disp = displays - 1 - (shot / 8);
 
   for (int d = 0; d < displays; d++) {
     for (int c = 0; c < 8; c++) {
-      lc.setLed(d, 4, c, c == col && d == disp);
+      // don't touch columns for the ship
+      if (d == 3 && c < 3) continue;
+
+      // draw bullet
+      lc.setLed(d, ship_position, c, c == col && d == disp);
     }
   }
 }
