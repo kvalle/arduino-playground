@@ -110,15 +110,11 @@ void debug(String msg)
 
 void draw_ship() 
 {
-  lc.setColumn(3, 0, B00000000);
-  lc.setColumn(3, 1, B00000000);
-  lc.setColumn(3, 2, B00000000);
-  lc.setLed(3, ship_position - 1, 0, true);
-  lc.setLed(3, ship_position - 1, 1, true);
-  lc.setLed(3, ship_position, 1, true);
-  lc.setLed(3, ship_position, 2, true);
-  lc.setLed(3, ship_position + 1, 0, true);
-  lc.setLed(3, ship_position + 1, 1, true);
+  byte offset = 6 - ship_position;
+  
+  lc.setColumn(3, 0, B101 << offset);
+  lc.setColumn(3, 1, B111 << offset);
+  lc.setColumn(3, 2, B010 << offset);
 }
 
 void draw_bullet()
