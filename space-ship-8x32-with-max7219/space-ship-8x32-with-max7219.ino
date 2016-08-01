@@ -140,9 +140,7 @@ void draw_bullet()
 
 
 void setup()
-{  
-  pinMode(FIRE_BUTTON_PIN, INPUT_PULLUP);
-  
+{ 
   // setup displays
   for (int i = 0; i < lc.getDeviceCount(); i++) {
     lc.shutdown(i, false);
