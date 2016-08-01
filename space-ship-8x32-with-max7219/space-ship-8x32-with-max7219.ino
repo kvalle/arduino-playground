@@ -105,21 +105,25 @@ void debug(String msg)
   }
 }
 
-void draw_ship()
+int ship_mask(int display, int row)
 {
-  byte offset = 6 - ship_position;
-
-  lc.setColumn(3, 0, B101 << offset);
-  lc.setColumn(3, 1, B111 << offset);
-  lc.setColumn(3, 2, B010 << offset);
+    if (display != 3)
+      return 0;
+    else if (row == (ship_position-1) || row == (ship_position+1))
+      return B11000000;
+    else if (row == ship_position)
+      return B01100000;
+    else
+      return 0;
 }
 
 void draw_bullet()
 {
   for (int r = 0; r < 8; r++) {
     unsigned long row = bullets[r];
-    for (int d = 0; d < 3; d++) {
-      lc.setRow(d, r, row >> (d * 8));
+    for (int d = 0; d < 4; d++) {
+      int mask = ship_mask(d, r);
+      lc.setRow(d, r, (row >> (d * 8)) | mask);
     }
   }
   
@@ -152,7 +156,7 @@ void loop()
 
   // view
   draw_bullet();
-  draw_ship();
+//  draw_ship();
 
   delay(FRAME);
 }
