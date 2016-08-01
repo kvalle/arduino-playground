@@ -2,8 +2,8 @@
 #include "LedControl.h"
 
 /*
- * Config 
- */
+   Config
+*/
 
 // SPI connector pins
 #define SPI_DIN  2
@@ -17,7 +17,7 @@
 #define FRAME 5
 
 // enable for debug mode
-#define DEBUG true
+#define DEBUG false
 
 // button pins used
 #define BUZZER_PIN 5
@@ -26,24 +26,23 @@
 #define DOWN_BUTTON_PIN 8
 
 
-
 /*
- * State
- */
+   State
+*/
 
 LedControl lc = LedControl(SPI_DIN, SPI_CLK, SPI_CS, DISPLAYS);
 
-int shot = -1;
 byte ship_position = 1;
 
 Button fireButton = Button(FIRE_BUTTON_PIN, &fireCallback);
 Button upButton = Button(UP_BUTTON_PIN, &upCallback);
 Button downButton = Button(DOWN_BUTTON_PIN, &downCallback);
 
+unsigned long bullets[8] = { 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L };
 
 /*
- * Input
- */
+   Input
+*/
 
 const int buttonAmount = 3;
 Button* buttons[buttonAmount] = {
@@ -55,14 +54,14 @@ Button* buttons[buttonAmount] = {
 void fireCallback(Button* button)
 {
   if (button->pressed) {
-    debug("pew pew");
+    debug("pew pew\n");
     shoot();
   }
 }
 
 void upCallback(Button* button)
-{ 
-  if (button->pressed && ship_position <= 5){
+{
+  if (button->pressed && ship_position <= 5) {
     ship_position++;
   }
 }
@@ -76,42 +75,40 @@ void downCallback(Button* button)
 
 
 /*
- * Update
- */
+   Update
+*/
 
 void update_bullet()
 {
-  if (shot < 0) {
-    return;
-  } else if (shot >= 8 * lc.getDeviceCount()) {
-    shot = -1;
-  } else {
-    shot++;  
+  for (int i = 0; i < 8; i++) {
+    unsigned long row = bullets[i];  
+    bullets[i] = row >> 1;
   }
 }
 
 void shoot() {
-  shot = 0;
+  unsigned long row = bullets[ship_position];
+  bullets[ship_position] = row | 0B00010000000000000000000000000000L;
+
   tone(BUZZER_PIN, 2960, 50);
 }
 
 
-
 /*
- * View
- */
+   View
+*/
 
-void debug(String msg) 
+void debug(String msg)
 {
   if (DEBUG) {
-    Serial.println(msg);
+    Serial.print(msg);
   }
 }
 
-void draw_ship() 
+void draw_ship()
 {
   byte offset = 6 - ship_position;
-  
+
   lc.setColumn(3, 0, B101 << offset);
   lc.setColumn(3, 1, B111 << offset);
   lc.setColumn(3, 2, B010 << offset);
@@ -119,28 +116,18 @@ void draw_ship()
 
 void draw_bullet()
 {
-  if (shot < 0) {
-    return;
-  }
-  
-  byte displays = lc.getDeviceCount();
-  byte col = shot % 8;
-  byte disp = displays - 1 - (shot / 8);
-
-  for (int d = 0; d < displays; d++) {
-    for (int c = 0; c < 8; c++) {
-      // don't touch columns for the ship
-      if (d == 3 && c < 3) continue;
-
-      // draw bullet
-      lc.setLed(d, ship_position, c, c == col && d == disp);
+  for (int r = 0; r < 8; r++) {
+    unsigned long row = bullets[r];
+    for (int d = 0; d < 3; d++) {
+      lc.setRow(d, r, row >> (d * 8));
     }
   }
+  
 }
 
 
 void setup()
-{ 
+{
   // setup displays
   for (int i = 0; i < lc.getDeviceCount(); i++) {
     lc.shutdown(i, false);
@@ -156,7 +143,7 @@ void setup()
 void loop()
 {
   // input
-  for (int i = 0; i < buttonAmount; i++){
+  for (int i = 0; i < buttonAmount; i++) {
     buttons[i]->read();
   }
 
@@ -164,8 +151,8 @@ void loop()
   update_bullet();
 
   // view
-  draw_ship();
   draw_bullet();
+  draw_ship();
 
   delay(FRAME);
 }
