@@ -38,7 +38,7 @@ Button fireButton = Button(FIRE_BUTTON_PIN, &fireCallback);
 Button upButton = Button(UP_BUTTON_PIN, &upCallback);
 Button downButton = Button(DOWN_BUTTON_PIN, &downCallback);
 
-unsigned long bullets[8] = { 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L };
+long bullets[8] = { 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L };
 
 
 /*
@@ -79,7 +79,7 @@ void downCallback(Button* button)
    Update
 */
 
-void update_bullet()
+void update_bullets()
 {
   for (int i = 0; i < 8; i++) {
     // take a step to the right
@@ -118,28 +118,28 @@ void debug(String msg)
   }
 }
 
-unsigned long get_ship_mask(int row)
+long get_ship_mask(int row)
 {
-    if (row == (ship_position-1) || row == (ship_position+1))
-      return 0B110L << 29;
-    else if (row == ship_position)
-      return 0B011L << 29;
-    else
-      return 0;
+  if (row == (ship_position - 1) || row == (ship_position + 1))
+    return 0B110L << 29;
+  else if (row == ship_position)
+    return 0B011L << 29;
+  else
+    return 0;
 }
 
-void draw_bullet()
+void draw()
 {
   for (int r = 0; r < 8; r++) {
-    unsigned long bullets_mask = bullets[r];
-    unsigned long ship_mask = get_ship_mask(r);
-    
-    unsigned long mask = bullets_mask | ship_mask;
+    long bullets_mask = bullets[r];
+    long ship_mask = get_ship_mask(r);
+
+    long mask = bullets_mask | ship_mask;
 
     for (int d = 0; d < 4; d++) {
       lc.setRow(d, r, (mask >> (d * 8)));
     }
-  } 
+  }
 }
 
 
@@ -165,10 +165,10 @@ void loop()
   }
 
   // update
-  update_bullet();
+  update_bullets();
 
   // view
-  draw_bullet();
+  draw();
 
   delay(FRAME);
 }
