@@ -23,7 +23,7 @@
 #define FRAME_MS 5
 
 // enable for debug mode
-#define DEBUG false
+#define DEBUG true
 
 
 /*
@@ -38,14 +38,14 @@ byte ship_position = 3;
 long bullets[8] = { 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L };
 
 int asteroids[8][10] = {
-  {3, 12, 32, 32, 32, 32, 32, 32, 32, 32},
-  {9, 32, 32, 32, 32, 32, 32, 32, 32, 32},
-  { 32, 32, 32, 32, 32, 32, 32, 32, 32, 32},
-  {2, 32, 32, 32, 32, 32, 32, 32, 32, 32},
-  {21, 24, 32, 32, 32, 32, 32, 32, 32, 32},
-  {7, 32, 32, 32, 32, 32, 32, 32, 32, 32},
-  { 32, 32, 32, 32, 32, 32, 32, 32, 32, 32},
-  {0, 4, 15, 32, 32, 32, 32, 32, 32, 32}
+  {32, 32, 32, 32, 32, 32, 32, 32, 32, 32},
+  {32, 32, 32, 32, 32, 32, 32, 32, 32, 32},
+  {32, 32, 32, 32, 32, 32, 32, 32, 32, 32},
+  {32, 32, 32, 32, 32, 32, 32, 32, 32, 32},
+  {32, 32, 32, 32, 32, 32, 32, 32, 32, 32},
+  {32, 32, 32, 32, 32, 32, 32, 32, 32, 32},
+  {32, 32, 32, 32, 32, 32, 32, 32, 32, 32},
+  {32, 32, 32, 32, 32, 32, 32, 32, 32, 32}
 };
 
 
@@ -101,7 +101,7 @@ void move_bullets()
 
 void move_asteroids()
 {
-  if (frame % 40 != 0) {
+  if (frame % 20 != 0) {
     return;
   }
 
@@ -116,19 +116,32 @@ void move_asteroids()
 
 void spawn_asteroids()
 {
-  if (frame % 120 != 0) {
+  if (frame % 30 != 0) {
     return;
   }
 
   new_asteroid(random(1, 7));
 }
 
-void new_asteroid(int col)
+void new_asteroid(int row)
 {
   for (int i = 0; i < 10; i++) {
-    if (asteroids[col][i] == 32) {
-      asteroids[col][i] = 0;
+    if (asteroids[row][i] == 32) {
+      asteroids[row][i] = 0;
       return;
+    }
+  }
+}
+
+void detect_collisions() {
+  for (int row = 0; row < 8; row++) {
+    for (int i = 0; i < 10; i++) {
+      int pos = asteroids[row][i];
+      long bullet_mask = bullets[row];
+      if (bullet_mask & (1L << pos)) {
+        debug("bang\n");
+        asteroids[row][i] = 32;
+      }
     }
   }
 }
@@ -232,6 +245,7 @@ void loop()
   check_buttons();
 
   // update
+  detect_collisions();
   spawn_asteroids();
   move_asteroids();
   move_bullets();
