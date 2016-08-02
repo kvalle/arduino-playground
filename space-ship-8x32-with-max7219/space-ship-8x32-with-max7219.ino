@@ -23,7 +23,7 @@
 #define FRAME_MS 5
 
 // enable for debug mode
-#define DEBUG false
+#define DEBUG true
 
 
 
@@ -35,6 +35,17 @@ LedControl lc = LedControl(SPI_DIN, SPI_CLK, SPI_CS, DISPLAYS);
 
 byte ship_position = 3;
 long bullets[8] = { 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L };
+
+int asteroids[8][10] = {
+  {3, 12, 100, 100, 100, 100, 100, 100, 100, 100},
+  {9, 100, 100, 100, 100, 100, 100, 100, 100, 100},
+  { 100, 100, 100, 100, 100, 100, 100, 100, 100, 100},
+  {2, 100, 100, 100, 100, 100, 100, 100, 100, 100},
+  {21, 24, 100, 100, 100, 100, 100, 100, 100, 100},
+  {7, 100, 100, 100, 100, 100, 100, 100, 100, 100},
+  { 100, 100, 100, 100, 100, 100, 100, 100, 100, 100},
+  {0, 4, 15, 100, 100, 100, 100, 100, 100, 100}
+};
 
 
 /*
@@ -127,13 +138,27 @@ long get_ship_mask(int row)
     return 0;
 }
 
+long get_asteroid_mask(int row)
+{
+  long mask = 0L;
+ 
+  for (int i = 0; i < 10; i++) {
+    if (asteroids[row][i] != 100) {
+      mask |= (1L << asteroids[row][i]);
+    }
+  }
+
+  return mask;
+}
+
 void draw()
 {
   for (int r = 0; r < 8; r++) {
     long bullets_mask = bullets[r];
     long ship_mask = get_ship_mask(r);
+    long asteroid_mask = get_asteroid_mask(r);
 
-    long mask = bullets_mask | ship_mask;
+    long mask = bullets_mask | ship_mask | asteroid_mask;
 
     for (int d = 0; d < 4; d++) {
       lc.setRow(d, r, (mask >> (d * 8)));
