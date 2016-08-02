@@ -40,6 +40,7 @@ Button downButton = Button(DOWN_BUTTON_PIN, &downCallback);
 
 unsigned long bullets[8] = { 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L };
 
+
 /*
    Input
 */
@@ -117,14 +118,12 @@ void debug(String msg)
   }
 }
 
-int ship_mask(int display, int row)
+unsigned long get_ship_mask(int row)
 {
-    if (display != 3)
-      return 0;
-    else if (row == (ship_position-1) || row == (ship_position+1))
-      return B11000000;
+    if (row == (ship_position-1) || row == (ship_position+1))
+      return 0B110L << 29;
     else if (row == ship_position)
-      return B01100000;
+      return 0B011L << 29;
     else
       return 0;
 }
@@ -132,13 +131,15 @@ int ship_mask(int display, int row)
 void draw_bullet()
 {
   for (int r = 0; r < 8; r++) {
-    unsigned long row = bullets[r];
+    unsigned long bullets_mask = bullets[r];
+    unsigned long ship_mask = get_ship_mask(r);
+    
+    unsigned long mask = bullets_mask | ship_mask;
+
     for (int d = 0; d < 4; d++) {
-      int mask = ship_mask(d, r);
-      lc.setRow(d, r, (row >> (d * 8)) | mask);
+      lc.setRow(d, r, (mask >> (d * 8)));
     }
-  }
-  
+  } 
 }
 
 
@@ -168,7 +169,6 @@ void loop()
 
   // view
   draw_bullet();
-//  draw_ship();
 
   delay(FRAME);
 }
