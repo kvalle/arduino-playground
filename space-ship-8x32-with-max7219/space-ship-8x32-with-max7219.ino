@@ -10,20 +10,21 @@
 #define SPI_CLK  4
 #define SPI_CS   3
 
-// number of displays connected
-#define DISPLAYS 4
-
-// time to sleep in ms
-#define FRAME 5
-
-// enable for debug mode
-#define DEBUG false
-
-// button pins used
+// button pins
 #define BUZZER_PIN 5
 #define FIRE_BUTTON_PIN 6
 #define DOWN_BUTTON_PIN 7
 #define UP_BUTTON_PIN 8
+
+// number of displays connected
+#define DISPLAYS 4
+
+// time to sleep in ms
+#define FRAME_MS 5
+
+// enable for debug mode
+#define DEBUG false
+
 
 
 /*
@@ -33,11 +34,6 @@
 LedControl lc = LedControl(SPI_DIN, SPI_CLK, SPI_CS, DISPLAYS);
 
 byte ship_position = 3;
-
-Button fireButton = Button(FIRE_BUTTON_PIN, &fireCallback);
-Button upButton = Button(UP_BUTTON_PIN, &upCallback);
-Button downButton = Button(DOWN_BUTTON_PIN, &downCallback);
-
 long bullets[8] = { 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L };
 
 
@@ -45,12 +41,15 @@ long bullets[8] = { 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L };
    Input
 */
 
-const int buttonAmount = 3;
-Button* buttons[buttonAmount] = {
-  &fireButton,
-  &upButton,
-  &downButton
-};
+Button fireButton = Button(FIRE_BUTTON_PIN, &fireCallback);
+Button upButton = Button(UP_BUTTON_PIN, &upCallback);
+Button downButton = Button(DOWN_BUTTON_PIN, &downCallback);
+
+void check_buttons() {
+  fireButton.read();
+  upButton.read();
+  downButton.read();
+}
 
 void fireCallback(Button* button)
 {
@@ -160,9 +159,7 @@ void setup()
 void loop()
 {
   // input
-  for (int i = 0; i < buttonAmount; i++) {
-    buttons[i]->read();
-  }
+  check_buttons();
 
   // update
   update_bullets();
@@ -170,6 +167,6 @@ void loop()
   // view
   draw();
 
-  delay(FRAME);
+  delay(FRAME_MS);
 }
 
