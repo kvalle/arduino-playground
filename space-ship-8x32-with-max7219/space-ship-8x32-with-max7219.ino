@@ -23,8 +23,7 @@
 #define FRAME_MS 5
 
 // enable for debug mode
-#define DEBUG true
-
+#define DEBUG false
 
 
 /*
@@ -33,18 +32,20 @@
 
 LedControl lc = LedControl(SPI_DIN, SPI_CLK, SPI_CS, DISPLAYS);
 
+int frame = 0;
+
 byte ship_position = 3;
 long bullets[8] = { 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L };
 
 int asteroids[8][10] = {
-  {3, 12, 100, 100, 100, 100, 100, 100, 100, 100},
-  {9, 100, 100, 100, 100, 100, 100, 100, 100, 100},
-  { 100, 100, 100, 100, 100, 100, 100, 100, 100, 100},
-  {2, 100, 100, 100, 100, 100, 100, 100, 100, 100},
-  {21, 24, 100, 100, 100, 100, 100, 100, 100, 100},
-  {7, 100, 100, 100, 100, 100, 100, 100, 100, 100},
-  { 100, 100, 100, 100, 100, 100, 100, 100, 100, 100},
-  {0, 4, 15, 100, 100, 100, 100, 100, 100, 100}
+  {3, 12, 32, 32, 32, 32, 32, 32, 32, 32},
+  {9, 32, 32, 32, 32, 32, 32, 32, 32, 32},
+  { 32, 32, 32, 32, 32, 32, 32, 32, 32, 32},
+  {2, 32, 32, 32, 32, 32, 32, 32, 32, 32},
+  {21, 24, 32, 32, 32, 32, 32, 32, 32, 32},
+  {7, 32, 32, 32, 32, 32, 32, 32, 32, 32},
+  { 32, 32, 32, 32, 32, 32, 32, 32, 32, 32},
+  {0, 4, 15, 32, 32, 32, 32, 32, 32, 32}
 };
 
 
@@ -56,7 +57,8 @@ Button fireButton = Button(FIRE_BUTTON_PIN, &fireCallback);
 Button upButton = Button(UP_BUTTON_PIN, &upCallback);
 Button downButton = Button(DOWN_BUTTON_PIN, &downCallback);
 
-void check_buttons() {
+void check_buttons()
+{
   fireButton.read();
   upButton.read();
   downButton.read();
@@ -89,7 +91,7 @@ void downCallback(Button* button)
    Update
 */
 
-void update_bullets()
+void move_bullets()
 {
   for (int i = 0; i < 8; i++) {
     // take a step to the right
@@ -97,7 +99,42 @@ void update_bullets()
   }
 }
 
-void shoot() {
+void move_asteroids()
+{
+  if (frame % 40 != 0) {
+    return;
+  }
+
+  for (int row = 0; row < 8; row++) {
+    for (int i = 0; i < 10; i++) {
+      if (asteroids[row][i] < 32) {
+        asteroids[row][i]++;
+      }
+    }
+  }
+}
+
+void spawn_asteroids()
+{
+  if (frame % 120 != 0) {
+    return;
+  }
+
+  new_asteroid(random(1, 7));
+}
+
+void new_asteroid(int col)
+{
+  for (int i = 0; i < 10; i++) {
+    if (asteroids[col][i] == 32) {
+      asteroids[col][i] = 0;
+      return;
+    }
+  }
+}
+
+void shoot()
+{
   // new bullets start at index 2
   bullets[ship_position] |= (1L << 29);
 
@@ -105,13 +142,15 @@ void shoot() {
   tone(BUZZER_PIN, 2960, 50);
 }
 
-void flyDown() {
+void flyDown()
+{
   if (ship_position < 6) {
     ship_position++;
   }
 }
 
-void flyUp() {
+void flyUp()
+{
   if (ship_position > 1) {
     ship_position--;
   }
@@ -141,9 +180,9 @@ long get_ship_mask(int row)
 long get_asteroid_mask(int row)
 {
   long mask = 0L;
- 
+
   for (int i = 0; i < 10; i++) {
-    if (asteroids[row][i] != 100) {
+    if (asteroids[row][i] != 32) {
       mask |= (1L << asteroids[row][i]);
     }
   }
@@ -166,6 +205,12 @@ void draw()
   }
 }
 
+void step_frame()
+{
+  frame++;
+  frame %= 1000;
+  delay(FRAME_MS);
+}
 
 void setup()
 {
@@ -187,11 +232,14 @@ void loop()
   check_buttons();
 
   // update
-  update_bullets();
+  spawn_asteroids();
+  move_asteroids();
+  move_bullets();
 
   // view
   draw();
 
-  delay(FRAME_MS);
+  // wait
+  step_frame();
 }
 
