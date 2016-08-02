@@ -22,8 +22,8 @@
 // button pins used
 #define BUZZER_PIN 5
 #define FIRE_BUTTON_PIN 6
-#define UP_BUTTON_PIN 7
-#define DOWN_BUTTON_PIN 8
+#define DOWN_BUTTON_PIN 7
+#define UP_BUTTON_PIN 8
 
 
 /*
@@ -32,7 +32,7 @@
 
 LedControl lc = LedControl(SPI_DIN, SPI_CLK, SPI_CS, DISPLAYS);
 
-byte ship_position = 1;
+byte ship_position = 3;
 
 Button fireButton = Button(FIRE_BUTTON_PIN, &fireCallback);
 Button upButton = Button(UP_BUTTON_PIN, &upCallback);
@@ -61,15 +61,15 @@ void fireCallback(Button* button)
 
 void upCallback(Button* button)
 {
-  if (button->pressed && ship_position <= 5) {
-    ship_position++;
+  if (button->pressed) {
+    flyUp();
   }
 }
 
 void downCallback(Button* button)
 {
-  if (button->pressed && ship_position >= 2) {
-    ship_position--;
+  if (button->pressed) {
+    flyDown();
   }
 }
 
@@ -81,18 +81,30 @@ void downCallback(Button* button)
 void update_bullet()
 {
   for (int i = 0; i < 8; i++) {
-    unsigned long row = bullets[i];  
-    bullets[i] = row >> 1;
+    // take a step to the right
+    bullets[i] >>= 1;
   }
 }
 
 void shoot() {
-  unsigned long row = bullets[ship_position];
-  bullets[ship_position] = row | 0B00010000000000000000000000000000L;
+  // new bullets start at index 2
+  bullets[ship_position] |= (1L << 29);
 
+  // pew pew
   tone(BUZZER_PIN, 2960, 50);
 }
 
+void flyDown() {
+  if (ship_position < 6) {
+    ship_position++;
+  }
+}
+
+void flyUp() {
+  if (ship_position > 1) {
+    ship_position--;
+  }
+}
 
 /*
    View
