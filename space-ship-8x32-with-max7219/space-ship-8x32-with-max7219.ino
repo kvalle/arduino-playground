@@ -48,6 +48,7 @@ int asteroids[8][10] = {
   {32, 32, 32, 32, 32, 32, 32, 32, 32, 32}
 };
 
+int game_running = false;
 
 /*
    Input
@@ -67,8 +68,12 @@ void check_buttons()
 void fireCallback(Button* button)
 {
   if (button->pressed) {
-    debug("pew pew\n");
-    shoot();
+    if (game_running) {
+      debug("pew pew\n");
+      shoot();
+    } else {
+      game_running = true;
+    }
   }
 }
 
@@ -133,15 +138,24 @@ void new_asteroid(int row)
   }
 }
 
-void detect_collisions() {
+void detect_collisions() 
+{
   for (int row = 0; row < 8; row++) {
     for (int i = 0; i < 10; i++) {
       int pos = asteroids[row][i];
+
+      // detect shoting of asteroids
       long bullet_mask = bullets[row];
       if (bullet_mask & (1L << pos)) {
         debug("bang\n");
         asteroids[row][i] = 32; // remove asteroid
         bullets[row] &= ~(1L << pos); // remove bullet
+      }
+
+      // detect ship collisions
+      unsigned long ship_mask = get_ship_mask(row);
+      if (ship_mask & (1L << pos)) {
+        game_running = false;
       }
     }
   }
@@ -240,11 +254,8 @@ void setup()
   }
 }
 
-void loop()
+void advance_game()
 {
-  // input
-  check_buttons();
-
   // update
   detect_collisions();
   move_asteroids();
@@ -257,5 +268,30 @@ void loop()
 
   // wait
   step_frame();
+}
+
+void pre_game_screen()
+{
+  for (int i = 0; i < 4; i++) {
+    lc.clearDisplay(i);
+  }
+
+  lc.setLed(2, 4, 6, true);
+  lc.setLed(1, 4, 1, true);
+  delay(100);
+  lc.setLed(2, 4, 6, false);
+  lc.setLed(1, 4, 1, false);
+  delay(100);
+}
+
+void loop()
+{
+  check_buttons();
+  
+  if (!game_running) {
+    pre_game_screen();
+  } else {
+    advance_game();
+  }
 }
 
