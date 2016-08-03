@@ -23,7 +23,7 @@
 #define FRAME_MS 5
 
 // enable for debug mode
-#define DEBUG true
+#define DEBUG false
 
 
 /*
@@ -96,6 +96,17 @@ void downCallback(Button* button)
    Update
 */
 
+void game_over()
+{
+  game_running = false;
+  for (int r = 0; r < 8; r++) {
+    for (int i = 0; i < 10; i++) {
+      asteroids[r][i] = 32;  
+    }
+  }
+  game_over_screen();
+}
+
 void move_bullets()
 {
   for (int i = 0; i < 8; i++) {
@@ -106,7 +117,7 @@ void move_bullets()
 
 void move_asteroids()
 {
-  if (frame % 20 != 0) {
+  if (frame % 8 != 0) {
     return;
   }
 
@@ -121,7 +132,7 @@ void move_asteroids()
 
 void spawn_asteroids()
 {
-  if (frame % 30 != 0) {
+  if (frame % 13 != 0) {
     return;
   }
 
@@ -138,7 +149,7 @@ void new_asteroid(int row)
   }
 }
 
-void detect_collisions() 
+void detect_collisions()
 {
   for (int row = 0; row < 8; row++) {
     for (int i = 0; i < 10; i++) {
@@ -155,7 +166,7 @@ void detect_collisions()
       // detect ship collisions
       unsigned long ship_mask = get_ship_mask(row);
       if (ship_mask & (1L << pos)) {
-        game_running = false;
+        game_over();
       }
     }
   }
@@ -270,24 +281,80 @@ void advance_game()
   step_frame();
 }
 
+void game_over_screen()
+{
+  long game[8] = {
+    0B00000000000000000000000000000000L,
+    0B00000111000011000010001000111000L,
+    0B00001000100100100101010100100000L,
+    0B00001000000100100100100100100000L,
+    0B00001001100111100100100100111000L,
+    0B00001000100100100100100100100000L,
+    0B00000111000100100100000100111000L,
+    0B00000000000000000000000000000000L
+  };
+
+  for (int r = 0; r < 8; r++) {
+    long mask = game[r];
+
+    for (int d = 0; d < 4; d++) {
+      lc.setRow(d, r, (mask >> (d * 8)));
+    }
+  }
+  delay(1000);
+
+  long over[8] = {
+    0B00000000000000000000000000000000L,
+    0B00000111000100001001110011100000L,
+    0B00001000100100001001000010010000L,
+    0B00001000100100001001000010010000L,
+    0B00001000100100001001110011100000L,
+    0B00001000100010010001000010010000L,
+    0B00000111000001100001110010010000L,
+    0B00000000000000000000000000000000L
+  };
+
+  for (int r = 0; r < 8; r++) {
+    long mask = over[r];
+
+    for (int d = 0; d < 4; d++) {
+      lc.setRow(d, r, (mask >> (d * 8)));
+    }
+  }
+  delay(1000);
+  
+  for (int d = 0; d < 4; d++) {
+      lc.clearDisplay(d);
+    }
+  delay(500);
+}
+
 void pre_game_screen()
 {
-  for (int i = 0; i < 4; i++) {
-    lc.clearDisplay(i);
-  }
+  long rows[8] = {
+    0B00000000000000000000000000000000,
+    0B00000000000000000000000000000000,
+    0B00111011101000100111011101000100,
+    0B00101010001000100101010001000100,
+    0B00111011101010100111011101010100,
+    0B00100010001101100100010001101100,
+    0B00100011101000100100011101000100,
+    0B00000000000000000000000000000000
+  };
+  
+  for (int r = 0; r < 8; r++) {
+    long mask = rows[r];
 
-  lc.setLed(2, 4, 6, true);
-  lc.setLed(1, 4, 1, true);
-  delay(100);
-  lc.setLed(2, 4, 6, false);
-  lc.setLed(1, 4, 1, false);
-  delay(100);
+    for (int d = 0; d < 4; d++) {
+      lc.setRow(d, r, (mask >> (d * 8)));
+    }
+  }
 }
 
 void loop()
 {
   check_buttons();
-  
+
   if (!game_running) {
     pre_game_screen();
   } else {
