@@ -141,7 +141,7 @@ void detect_collisions() {
       if (bullet_mask & (1L << pos)) {
         debug("bang\n");
         asteroids[row][i] = 32; // remove asteroid
-        bullets[row] &= ~(1 << pos); // remove bullet
+        bullets[row] &= ~(1L << pos); // remove bullet
       }
     }
   }
@@ -247,9 +247,10 @@ void loop()
 
   // update
   detect_collisions();
-  spawn_asteroids();
   move_asteroids();
+  detect_collisions();
   move_bullets();
+  spawn_asteroids();
 
   // view
   draw();
