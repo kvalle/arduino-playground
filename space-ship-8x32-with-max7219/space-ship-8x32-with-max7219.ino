@@ -66,7 +66,7 @@ long screen_buffer[8];
 
 /*
    Inputs
- */
+*/
 
 Button fireButton = Button(FIRE_BUTTON_PIN, &fireCallback);
 Button upButton = Button(UP_BUTTON_PIN, &upCallback);
@@ -117,6 +117,22 @@ void draw()
     for (int d = 0; d < lc.getDeviceCount(); d++) {
       lc.setRow(d, row, (screen_buffer[row] >> (d * 8)));
     }
+  }
+}
+
+void clearDisplays()
+{
+  for (int d = 0; d < lc.getDeviceCount(); d++) {
+    lc.clearDisplay(d);
+  }
+}
+
+void initDisplays()
+{
+  for (int d = 0; d < lc.getDeviceCount(); d++) {
+    lc.shutdown(d, false);
+    lc.setIntensity(d, 7);
+    lc.clearDisplay(d);
   }
 }
 
@@ -291,11 +307,7 @@ void step_frame()
 void setup()
 {
   // setup displays
-  for (int d = 0; d < lc.getDeviceCount(); d++) {
-    lc.shutdown(d, false);
-    lc.setIntensity(d, 7);
-    lc.clearDisplay(d);
-  }
+  initDisplays();
 
   if (DEBUG) {
     Serial.begin(9600);
@@ -331,14 +343,8 @@ void game_over_screen()
     0B00000111000100100100000100111000L,
     0B00000000000000000000000000000000L
   };
-
-  for (int r = 0; r < 8; r++) {
-    long mask = game[r];
-
-    for (int d = 0; d < 4; d++) {
-      lc.setRow(d, r, (mask >> (d * 8)));
-    }
-  }
+  memcpy(screen_buffer, game, sizeof(game));
+  draw();
   delay(1000);
 
   long over[8] = {
@@ -351,25 +357,17 @@ void game_over_screen()
     0B00000111000001100001110010010000L,
     0B00000000000000000000000000000000L
   };
-
-  for (int r = 0; r < 8; r++) {
-    long mask = over[r];
-
-    for (int d = 0; d < 4; d++) {
-      lc.setRow(d, r, (mask >> (d * 8)));
-    }
-  }
+  memcpy(screen_buffer, over, sizeof(over));
+  draw();
   delay(1000);
 
-  for (int d = 0; d < 4; d++) {
-    lc.clearDisplay(d);
-  }
+  clearDisplays();
   delay(500);
 }
 
 void pre_game_screen()
 {
-  long rows[8] = {
+  long pewpew[] = {
     0B00000000000000000000000000000000,
     0B00000000000000000000000000000000,
     0B00111011101000100111011101000100,
@@ -379,14 +377,8 @@ void pre_game_screen()
     0B00100011101000100100011101000100,
     0B00000000000000000000000000000000
   };
-
-  for (int r = 0; r < 8; r++) {
-    long mask = rows[r];
-
-    for (int d = 0; d < 4; d++) {
-      lc.setRow(d, r, (mask >> (d * 8)));
-    }
-  }
+  memcpy(screen_buffer, pewpew, sizeof(pewpew));
+  draw();
 }
 
 void loop()
