@@ -216,7 +216,7 @@ void detect_collisions()
       long bullet_mask = bullets[row];
       if (bullet_mask & (1L << pos)) {
         debug("bang\n");
-        asteroids[row][i] = NUMBER_OF_ROWS; // remove asteroid
+        asteroids[row][i] = NUMBER_OF_COLS; // remove asteroid
         bullets[row] &= ~(1L << pos); // remove bullet
       }
 
