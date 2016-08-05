@@ -4,10 +4,10 @@
 /*
    PEW PEW
 
-   Your typical simple space shpi side scrolling asteroid shooter.
+   Your typical simple space ship side scrolling asteroid shooter.
 
    Currently hard coded to work with four 8x8 LED matrices used side
-   by side as a 8x32 display, but could  probably easily be reworked
+   by side as a 8x32 display, but could probably easily be reworked
    to work with other configurations.
 */
 
