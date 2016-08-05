@@ -16,9 +16,12 @@
 */
 
 // SPI connector pins
-#define SPI_DIN  2
-#define SPI_CLK  4
-#define SPI_CS   3
+#define MATRIX_SPI_DIN    2
+#define MATRIX_SPI_CLK    4
+#define MATRIX_SPI_CS     3
+#define SEGMENTS_SPI_DIN 12
+#define SEGMENTS_SPI_CLK 11
+#define SEGMENTS_SPI_CS  10
 
 // display dimensions
 #define NUMBER_OF_ROWS 8
@@ -36,7 +39,7 @@
 #define MAX_ASTEROIDS_PER_ROW 10
 
 // enable for debug mode
-#define DEBUG false
+#define DEBUG true
 
 
 /*
@@ -63,6 +66,8 @@ int game_running = false;
 
 // Buffer used by the draw() method for updating the displays
 long screen_buffer[8];
+
+long score = 0;
 
 /*
    Inputs
@@ -109,32 +114,56 @@ void downCallback(Button* button)
    Output
 */
 
-LedControl lc = LedControl(SPI_DIN, SPI_CLK, SPI_CS, 4);
+LedControl lc_matrix = LedControl(MATRIX_SPI_DIN, MATRIX_SPI_CLK, MATRIX_SPI_CS, 4);
+LedControl lc_segments = LedControl(SEGMENTS_SPI_DIN, SEGMENTS_SPI_CLK, SEGMENTS_SPI_CS, 1);
 
 void draw()
 {
   for (int row = 0; row < NUMBER_OF_ROWS; row++) {
-    for (int d = 0; d < lc.getDeviceCount(); d++) {
-      lc.setRow(d, row, (screen_buffer[row] >> (d * 8)));
+    for (int d = 0; d < lc_matrix.getDeviceCount(); d++) {
+      lc_matrix.setRow(d, row, (screen_buffer[row] >> (d * 8)));
     }
   }
+
+  debug("score is " + String(score) + "\n");
+  set_score(score);
 }
 
 void clearDisplays()
 {
-  for (int d = 0; d < lc.getDeviceCount(); d++) {
-    lc.clearDisplay(d);
+  for (int d = 0; d < lc_matrix.getDeviceCount(); d++) {
+    lc_matrix.clearDisplay(d);
   }
 }
 
 void initDisplays()
 {
-  for (int d = 0; d < lc.getDeviceCount(); d++) {
-    lc.shutdown(d, false);
-    lc.setIntensity(d, 7);
-    lc.clearDisplay(d);
+  for (int d = 0; d < lc_matrix.getDeviceCount(); d++) {
+    lc_matrix.shutdown(d, false);
+    lc_matrix.setIntensity(d, 7);
+    lc_matrix.clearDisplay(d);
+  }
+
+  lc_segments.shutdown(0, false);
+  lc_segments.setIntensity(0, 5);
+  lc_segments.clearDisplay(0);
+}
+
+void set_score(long num)
+{
+  if (num > 99999999L) {
+    num = 99999999L;
+  }
+
+  byte digit = 0;
+  while (true) {
+    Serial.println(num % 10);
+    lc_segments.setDigit(0, digit++, num % 10, false);
+    num /= 10;
+    if (num <= 0) break;
   }
 }
+
 
 /*
    Update - shit that changes the game state
@@ -142,12 +171,14 @@ void initDisplays()
 
 void game_over()
 {
+  debug("game over");
   game_running = false;
   game_over_screen();
 }
 
 void new_game()
 {
+  debug("new game");
   frame = 0;
   ship_position = 3;
 
@@ -218,6 +249,7 @@ void detect_collisions()
         debug("bang\n");
         asteroids[row][i] = NUMBER_OF_COLS; // remove asteroid
         bullets[row] &= ~(1L << pos); // remove bullet
+        score++;
       }
 
       // detect ship collisions
