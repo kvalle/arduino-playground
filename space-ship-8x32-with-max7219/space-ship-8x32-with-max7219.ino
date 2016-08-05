@@ -2,6 +2,16 @@
 #include "LedControl.h"
 
 /*
+   PEW PEW
+
+   Your typical simple space shpi side scrolling asteroid shooter.
+
+   Currently hard coded to work with four 8x8 LED matrices used side
+   by side as a 8x32 display, but could  probably easily be reworked
+   to work with other configurations.
+*/
+
+/*
    Config
 */
 
@@ -10,49 +20,51 @@
 #define SPI_CLK  4
 #define SPI_CS   3
 
+// display dimensions
+#define NUMBER_OF_ROWS 8
+#define NUMBER_OF_COLS 32
+
 // button pins
 #define BUZZER_PIN 5
 #define FIRE_BUTTON_PIN 6
 #define DOWN_BUTTON_PIN 7
 #define UP_BUTTON_PIN 8
 
-// number of displays connected
-#define DISPLAYS 4
-
 // time to sleep in ms
 #define FRAME_MS 5
+
+#define MAX_ASTEROIDS_PER_ROW 10
 
 // enable for debug mode
 #define DEBUG false
 
 
 /*
-   State
+   Game state
 */
 
-LedControl lc = LedControl(SPI_DIN, SPI_CLK, SPI_CS, DISPLAYS);
-
+// Used to keep track of game time, for things only changing every n-th frame
 int frame = 0;
 
+// Which row the ship is centered on. Shoudl be in range [1, 6] in order
+// for whole ship to be shown.
 byte ship_position = 3;
-long bullets[8] = { 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L };
 
-int asteroids[8][10] = {
-  {32, 32, 32, 32, 32, 32, 32, 32, 32, 32},
-  {32, 32, 32, 32, 32, 32, 32, 32, 32, 32},
-  {32, 32, 32, 32, 32, 32, 32, 32, 32, 32},
-  {32, 32, 32, 32, 32, 32, 32, 32, 32, 32},
-  {32, 32, 32, 32, 32, 32, 32, 32, 32, 32},
-  {32, 32, 32, 32, 32, 32, 32, 32, 32, 32},
-  {32, 32, 32, 32, 32, 32, 32, 32, 32, 32},
-  {32, 32, 32, 32, 32, 32, 32, 32, 32, 32}
-};
+// Bullets are represnted by one long per row, each bit representing
+// a bullet either present or absent in the corresponding column.
+long bullets[NUMBER_OF_ROWS];
+
+// List of asteroid positions.
+// There are 8 rows x max 10 asteroids per row.
+int asteroids[NUMBER_OF_ROWS][MAX_ASTEROIDS_PER_ROW];
 
 int game_running = false;
 
 /*
-   Input
+   Inns and outs
 */
+
+LedControl lc = LedControl(SPI_DIN, SPI_CLK, SPI_CS, 4);
 
 Button fireButton = Button(FIRE_BUTTON_PIN, &fireCallback);
 Button upButton = Button(UP_BUTTON_PIN, &upCallback);
@@ -72,7 +84,7 @@ void fireCallback(Button* button)
       debug("pew pew\n");
       shoot();
     } else {
-      game_running = true;
+      new_game();
     }
   }
 }
@@ -93,23 +105,36 @@ void downCallback(Button* button)
 
 
 /*
-   Update
+   Update - shit that changes the game state
 */
 
 void game_over()
 {
   game_running = false;
-  for (int r = 0; r < 8; r++) {
-    for (int i = 0; i < 10; i++) {
-      asteroids[r][i] = 32;  
+  game_over_screen();
+}
+
+void new_game()
+{
+  frame = 0;
+  ship_position = 3;
+
+  for (int row = 0; row < NUMBER_OF_ROWS; row++) {
+    // stop bullets from flying
+    bullets[row] = 0L;
+
+    for (int i = 0; i < MAX_ASTEROIDS_PER_ROW; i++) {
+      // move all asteroids off screen
+      asteroids[row][i] = NUMBER_OF_COLS;
     }
   }
-  game_over_screen();
+
+  game_running = true;
 }
 
 void move_bullets()
 {
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < NUMBER_OF_ROWS; i++) {
     // take a step to the right
     bullets[i] >>= 1;
   }
@@ -121,9 +146,9 @@ void move_asteroids()
     return;
   }
 
-  for (int row = 0; row < 8; row++) {
-    for (int i = 0; i < 10; i++) {
-      if (asteroids[row][i] < 32) {
+  for (int row = 0; row < NUMBER_OF_ROWS; row++) {
+    for (int i = 0; i < MAX_ASTEROIDS_PER_ROW; i++) {
+      if (asteroids[row][i] < NUMBER_OF_COLS) {
         asteroids[row][i]++;
       }
     }
@@ -141,8 +166,8 @@ void spawn_asteroids()
 
 void new_asteroid(int row)
 {
-  for (int i = 0; i < 10; i++) {
-    if (asteroids[row][i] == 32) {
+  for (int i = 0; i < MAX_ASTEROIDS_PER_ROW; i++) {
+    if (asteroids[row][i] >= NUMBER_OF_COLS) {
       asteroids[row][i] = 0;
       return;
     }
@@ -151,15 +176,15 @@ void new_asteroid(int row)
 
 void detect_collisions()
 {
-  for (int row = 0; row < 8; row++) {
-    for (int i = 0; i < 10; i++) {
+  for (int row = 0; row < NUMBER_OF_ROWS; row++) {
+    for (int i = 0; i < MAX_ASTEROIDS_PER_ROW; i++) {
       int pos = asteroids[row][i];
 
       // detect shoting of asteroids
       long bullet_mask = bullets[row];
       if (bullet_mask & (1L << pos)) {
         debug("bang\n");
-        asteroids[row][i] = 32; // remove asteroid
+        asteroids[row][i] = NUMBER_OF_ROWS; // remove asteroid
         bullets[row] &= ~(1L << pos); // remove bullet
       }
 
@@ -174,8 +199,8 @@ void detect_collisions()
 
 void shoot()
 {
-  // new bullets start at index 2
-  bullets[ship_position] |= (1L << 29);
+  // new bullets start at column 2, to not overlap with the space ship
+  bullets[ship_position] |= (1L << (NUMBER_OF_COLS - 3));
 
   // pew pew
   tone(BUZZER_PIN, 2960, 50);
@@ -220,8 +245,8 @@ long get_asteroid_mask(int row)
 {
   long mask = 0L;
 
-  for (int i = 0; i < 10; i++) {
-    if (asteroids[row][i] != 32) {
+  for (int i = 0; i < MAX_ASTEROIDS_PER_ROW; i++) {
+    if (asteroids[row][i] != NUMBER_OF_COLS) {
       mask |= (1L << asteroids[row][i]);
     }
   }
@@ -231,15 +256,15 @@ long get_asteroid_mask(int row)
 
 void draw()
 {
-  for (int r = 0; r < 8; r++) {
-    long bullets_mask = bullets[r];
-    long ship_mask = get_ship_mask(r);
-    long asteroid_mask = get_asteroid_mask(r);
+  for (int row = 0; row < NUMBER_OF_ROWS; row++) {
+    long bullets_mask = bullets[row];
+    long ship_mask = get_ship_mask(row);
+    long asteroid_mask = get_asteroid_mask(row);
 
     long mask = bullets_mask | ship_mask | asteroid_mask;
 
-    for (int d = 0; d < 4; d++) {
-      lc.setRow(d, r, (mask >> (d * 8)));
+    for (int d = 0; d < lc.getDeviceCount(); d++) {
+      lc.setRow(d, row, (mask >> (d * 8)));
     }
   }
 }
@@ -254,10 +279,10 @@ void step_frame()
 void setup()
 {
   // setup displays
-  for (int i = 0; i < lc.getDeviceCount(); i++) {
-    lc.shutdown(i, false);
-    lc.setIntensity(i, 7);
-    lc.clearDisplay(i);
+  for (int d = 0; d < lc.getDeviceCount(); d++) {
+    lc.shutdown(d, false);
+    lc.setIntensity(d, 7);
+    lc.clearDisplay(d);
   }
 
   if (DEBUG) {
@@ -322,10 +347,10 @@ void game_over_screen()
     }
   }
   delay(1000);
-  
+
   for (int d = 0; d < 4; d++) {
-      lc.clearDisplay(d);
-    }
+    lc.clearDisplay(d);
+  }
   delay(500);
 }
 
@@ -341,7 +366,7 @@ void pre_game_screen()
     0B00100011101000100100011101000100,
     0B00000000000000000000000000000000
   };
-  
+
   for (int r = 0; r < 8; r++) {
     long mask = rows[r];
 
