@@ -58,13 +58,15 @@ long bullets[NUMBER_OF_ROWS];
 // There are 8 rows x max 10 asteroids per row.
 int asteroids[NUMBER_OF_ROWS][MAX_ASTEROIDS_PER_ROW];
 
+// When to show game splash screen, and when to have fun :)
 int game_running = false;
 
-/*
-   Inns and outs
-*/
+// Buffer used by the draw() method for updating the displays
+long screen_buffer[8];
 
-LedControl lc = LedControl(SPI_DIN, SPI_CLK, SPI_CS, 4);
+/*
+   Inputs
+ */
 
 Button fireButton = Button(FIRE_BUTTON_PIN, &fireCallback);
 Button upButton = Button(UP_BUTTON_PIN, &upCallback);
@@ -103,6 +105,20 @@ void downCallback(Button* button)
   }
 }
 
+/*
+   Output
+*/
+
+LedControl lc = LedControl(SPI_DIN, SPI_CLK, SPI_CS, 4);
+
+void draw()
+{
+  for (int row = 0; row < NUMBER_OF_ROWS; row++) {
+    for (int d = 0; d < lc.getDeviceCount(); d++) {
+      lc.setRow(d, row, (screen_buffer[row] >> (d * 8)));
+    }
+  }
+}
 
 /*
    Update - shit that changes the game state
@@ -220,6 +236,17 @@ void flyUp()
   }
 }
 
+void update_screen_buffer()
+{
+  for (int row = 0; row < NUMBER_OF_ROWS; row++) {
+    long bullets_mask = bullets[row];
+    long ship_mask = get_ship_mask(row);
+    long asteroid_mask = get_asteroid_mask(row);
+
+    screen_buffer[row] = bullets_mask | ship_mask | asteroid_mask;
+  }
+}
+
 /*
    View
 */
@@ -254,21 +281,6 @@ long get_asteroid_mask(int row)
   return mask;
 }
 
-void draw()
-{
-  for (int row = 0; row < NUMBER_OF_ROWS; row++) {
-    long bullets_mask = bullets[row];
-    long ship_mask = get_ship_mask(row);
-    long asteroid_mask = get_asteroid_mask(row);
-
-    long mask = bullets_mask | ship_mask | asteroid_mask;
-
-    for (int d = 0; d < lc.getDeviceCount(); d++) {
-      lc.setRow(d, row, (mask >> (d * 8)));
-    }
-  }
-}
-
 void step_frame()
 {
   frame++;
@@ -298,6 +310,7 @@ void advance_game()
   detect_collisions();
   move_bullets();
   spawn_asteroids();
+  update_screen_buffer();
 
   // view
   draw();
